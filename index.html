@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>¿Tú me quieres?</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Decorative background elements -->
+    <div class="background-blobs">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+
+    <!-- Main container -->
+    <div class="container">
+        <!-- Question section (hidden after "Sí" is clicked) -->
+        <section id="question-section" class="card">
+            <h1 class="question-title">¿Tú me quieres?</h1>
+
+            <div class="buttons-wrapper">
+                <button id="btn-yes" class="btn btn-yes" aria-label="Botón Sí">
+                    <span class="btn-text">Sí</span>
+                    <span class="btn-heart">💗</span>
+                </button>
+                <button id="btn-no" class="btn btn-no" aria-label="Botón No">
+                    <span class="btn-text">No</span>
+                </button>
+            </div>
+
+            <!-- Live region for screen readers when "No" button moves -->
+            <div id="no-feedback" aria-live="polite" aria-atomic="true" class="sr-only"></div>
+        </section>
+
+        <!-- Reveal section (shown after "Sí" is clicked) -->
+        <section id="reveal-section" class="card reveal-hidden">
+            <h2 class="reveal-title">¡Sabía que sí!</h2>
+            <p class="reveal-message">Te quiero muchísimo. Eres lo mejor que me pasó. 💗</p>
+            <div id="hearts-container" class="hearts-container"></div>
+        </section>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
