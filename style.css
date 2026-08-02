@@ -237,11 +237,13 @@ body {
     transform: translateY(0);
 }
 
-/* No button evasion */
+/* No button evasion - lives on <body> so it is never clipped by the card */
 .btn-no.evading {
     position: fixed;
     z-index: 1000;
+    margin: 0;
     pointer-events: auto;
+    will-change: left, top;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -252,7 +254,9 @@ body {
 
 @media (prefers-reduced-motion: no-preference) {
     .btn-no.evading {
-        transition: all 0.15s ease-out;
+        transition: left 0.25s cubic-bezier(0.34, 1.2, 0.64, 1),
+                    top 0.25s cubic-bezier(0.34, 1.2, 0.64, 1),
+                    background-color 0.2s ease;
     }
 }
 

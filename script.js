@@ -15,28 +15,69 @@ const escapePhrases = ['No', '¿Segura/o?', 'Casi...', 'Inténtalo de nuevo', 'V
 const supportsHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
 const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-// Helper: Get random position for evading button (always visible)
-function getRandomPosition() {
-    const padding = 10;
-    const btnWidth = 120;
-    const btnHeight = 48;
-    const maxWidth = window.innerWidth - btnWidth - padding;
-    const maxHeight = window.innerHeight - btnHeight - padding;
+// Last known pointer position, so the button never lands under the cursor
+const pointer = { x: -9999, y: -9999 };
 
-    const x = Math.random() * maxWidth + padding;
-    const y = Math.random() * maxHeight + padding;
-
-    return { x, y };
+// Helper: does rect (x, y, w, h) overlap the question card (plus a safety gap)?
+function overlapsCard(x, y, w, h) {
+    const card = questionSection.getBoundingClientRect();
+    const gap = 24;
+    return (
+        x < card.right + gap &&
+        x + w > card.left - gap &&
+        y < card.bottom + gap &&
+        y + h > card.top - gap
+    );
 }
 
-// Helper: Move button with smooth transition
+// Helper: pick a random on-screen spot away from the card and from the cursor
+function getSafePosition() {
+    const margin = 12;
+    const rect = btnNo.getBoundingClientRect();
+    const w = rect.width || 110;
+    const h = rect.height || 48;
+
+    const maxX = Math.max(margin, window.innerWidth - w - margin);
+    const maxY = Math.max(margin, window.innerHeight - h - margin);
+
+    for (let i = 0; i < 40; i++) {
+        const x = margin + Math.random() * (maxX - margin);
+        const y = margin + Math.random() * (maxY - margin);
+
+        const nearCursor =
+            Math.abs(x + w / 2 - pointer.x) < w + 40 &&
+            Math.abs(y + h / 2 - pointer.y) < h + 40;
+
+        if (!overlapsCard(x, y, w, h) && !nearCursor) {
+            return { x, y };
+        }
+    }
+
+    // Fallback (tiny viewport): the corner farthest from the cursor
+    const corners = [
+        { x: margin, y: margin },
+        { x: maxX, y: margin },
+        { x: margin, y: maxY },
+        { x: maxX, y: maxY }
+    ];
+    return corners.reduce((best, c) => {
+        const d = Math.hypot(c.x - pointer.x, c.y - pointer.y);
+        return d > best.d ? { ...c, d } : best;
+    }, { ...corners[0], d: -1 });
+}
+
+// Helper: move the button to a new spot — it slides, it never disappears
 function moveButton() {
     if (!isEvading) {
         isEvading = true;
+        // Reparent to <body>: the card clips fixed children (overflow:hidden +
+        // the perspective/backdrop-filter containing block), which made the
+        // button vanish instead of relocating.
+        document.body.appendChild(btnNo);
         btnNo.classList.add('evading');
     }
 
-    const pos = getRandomPosition();
+    const pos = getSafePosition();
     btnNo.style.left = pos.x + 'px';
     btnNo.style.top = pos.y + 'px';
 
@@ -50,6 +91,17 @@ function moveButton() {
         btnYes.classList.add('scaled');
         setTimeout(() => btnYes.classList.remove('scaled'), 300);
     }
+}
+
+// Keep the button on screen when the viewport changes
+function clampToViewport() {
+    if (!isEvading) return;
+    const margin = 12;
+    const rect = btnNo.getBoundingClientRect();
+    const maxX = Math.max(margin, window.innerWidth - rect.width - margin);
+    const maxY = Math.max(margin, window.innerHeight - rect.height - margin);
+    btnNo.style.left = Math.min(Math.max(rect.left, margin), maxX) + 'px';
+    btnNo.style.top = Math.min(Math.max(rect.top, margin), maxY) + 'px';
 }
 
 // Helper: Create floating heart animation
@@ -87,35 +139,44 @@ btnYes.addEventListener('click', () => {
     questionSection.classList.add('question-hidden');
     setTimeout(() => {
         questionSection.style.display = 'none';
+        btnNo.remove(); // it lives on <body> once it starts evading
         revealSection.classList.remove('reveal-hidden');
         revealSection.classList.add('reveal-visible');
         spawnHearts();
     }, 400);
 });
 
-// Handle "No" button - Desktop (hover)
-if (supportsHover) {
-    // Move on mouse enter - every time the cursor enters the button area
-    btnNo.addEventListener('mouseenter', moveButton);
-}
+// Track the cursor so the button never relocates right under it
+window.addEventListener('mousemove', (e) => {
+    pointer.x = e.clientX;
+    pointer.y = e.clientY;
+}, { passive: true });
 
-// Handle "No" button - Mobile/Touch
-else {
+window.addEventListener('resize', clampToViewport);
+
+// Handle "No" button - it escapes on every attempt, whatever the input
+if (supportsHover) {
+    btnNo.addEventListener('mouseenter', moveButton);
+    btnNo.addEventListener('mouseover', moveButton);
+    btnNo.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        moveButton();
+    });
+} else {
     btnNo.addEventListener('touchstart', (e) => {
         e.preventDefault();
         moveButton();
     }, { passive: false });
 }
 
-// Prevent "No" button from being clicked
+// Never let the click land
 btnNo.addEventListener('click', (e) => {
     e.preventDefault();
     moveButton();
 });
 
-// Handle "No" button - Keyboard navigation
-btnNo.addEventListener('focus', (e) => {
-    e.preventDefault();
+// Keyboard navigation
+btnNo.addEventListener('focus', () => {
     moveButton();
     noFeedback.textContent = 'El botón No no se puede seleccionar. ¡Presiona Sí!';
 });
