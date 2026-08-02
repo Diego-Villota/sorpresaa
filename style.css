@@ -160,7 +160,6 @@ body {
     font-size: clamp(1rem, 4vw, 1.25rem);
     color: var(--text-secondary);
     line-height: 1.6;
-    margin-bottom: 2rem;
 }
 
 /* Buttons */
@@ -301,33 +300,40 @@ body {
     }
 }
 
-/* Hearts container */
+/* Hearts overlay - full screen, takes no layout space */
 .hearts-container {
-    position: relative;
-    height: 300px;
-    margin-top: 2rem;
+    position: fixed;
+    inset: 0;
+    z-index: 5;
+    pointer-events: none;
+    overflow: hidden;
 }
 
 .floating-heart {
     position: absolute;
+    bottom: -3rem;
     font-size: 2rem;
     opacity: 0;
     pointer-events: none;
+    will-change: transform, opacity;
 }
 
 @media (prefers-reduced-motion: no-preference) {
     .floating-heart {
-        animation: floatUp 3s ease-in forwards;
+        animation: floatUp 4s ease-in forwards;
     }
 
     @keyframes floatUp {
         0% {
+            opacity: 0;
+            transform: translateY(0) translateX(0) scale(0.6);
+        }
+        15% {
             opacity: 1;
-            transform: translateY(0) translateX(0) scale(1);
         }
         100% {
             opacity: 0;
-            transform: translateY(-300px) translateX(var(--tx)) scale(0.5);
+            transform: translateY(-100vh) translateX(var(--tx)) scale(1.1);
         }
     }
 }
@@ -365,23 +371,8 @@ body {
         display: none;
     }
 
-    .hearts-container {
-        height: 200px;
-    }
-
     .floating-heart {
         font-size: 1.5rem;
-    }
-
-    @keyframes floatUp {
-        0% {
-            opacity: 1;
-            transform: translateY(0) translateX(0) scale(1);
-        }
-        100% {
-            opacity: 0;
-            transform: translateY(-200px) translateX(var(--tx)) scale(0.5);
-        }
     }
 }
 

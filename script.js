@@ -104,33 +104,29 @@ function clampToViewport() {
     btnNo.style.top = Math.min(Math.max(rect.top, margin), maxY) + 'px';
 }
 
-// Helper: Create floating heart animation
+// Helper: Create one heart rising up the screen
 function createFloatingHeart() {
     const heart = document.createElement('div');
     heart.className = 'floating-heart';
     heart.textContent = '❤️';
 
-    const randomX = (Math.random() - 0.5) * 150;
-    heart.style.setProperty('--tx', randomX + 'px');
-    heart.style.left = '50%';
-    heart.style.top = '0';
-    heart.style.transform = 'translateX(-50%)';
+    // Spread across the width, drift sideways, vary size and pace
+    heart.style.left = (5 + Math.random() * 90) + '%';
+    heart.style.setProperty('--tx', ((Math.random() - 0.5) * 160) + 'px');
+    heart.style.fontSize = (1.4 + Math.random() * 1.4) + 'rem';
+    heart.style.animationDuration = (3.4 + Math.random() * 1.8) + 's';
 
     heartsContainer.appendChild(heart);
-
-    if (!prefersReducedMotion) {
-        setTimeout(() => heart.remove(), 3000);
-    } else {
-        setTimeout(() => heart.remove(), 500);
-    }
+    heart.addEventListener('animationend', () => heart.remove());
+    // Safety net: if the animation never runs (or never ends), don't leak nodes
+    setTimeout(() => heart.remove(), 7000);
 }
 
-// Helper: Spawn multiple floating hearts
+// Helper: Spawn a stream of hearts
 function spawnHearts() {
-    if (!prefersReducedMotion) {
-        for (let i = 0; i < 5; i++) {
-            setTimeout(() => createFloatingHeart(), i * 200);
-        }
+    if (prefersReducedMotion) return;
+    for (let i = 0; i < 16; i++) {
+        setTimeout(createFloatingHeart, i * 180);
     }
 }
 
